@@ -1,25 +1,95 @@
 ---
-title: "Reproducible Research: Peer Assessment 1"
-output: 
-  html_document:
-    keep_md: true
+title: "Week2"
+author: "Muzi Li"
+date: "12/19/2019"
+output: html_document
 ---
 
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, message = FALSE)
+```
 
-## Loading and preprocessing the data
+### Quantified Movement Activity Analysis
+
+```{r step1}
+Data <- read.csv('activity.csv')
+Data$date <- as.POSIXct(Data$date) 
+library(ggplot2)
+```
+
+#### Mean Total Steps Per Day
+
+```{r step2}
+Total_Data <- aggregate(x=list(Steps=Data$steps), by=list(Date=Data$date), FUN=sum, na.rm=TRUE)
+ggplot(Total_Data, aes(x=Steps)) + geom_histogram() +
+  xlab("Steps/Day") + ylab("Count") + 
+  labs(title=expression("Total Number of Steps Taken Per Day"))
+```
+
+```{r step3}
+mean <- mean(Total_Data$Steps)
+median <- median(Total_Data$Steps)
+```
+
+The mean is `r mean ` and the median is `r median`
+
+### Mean Total Steps Per Interval
+
+```{r step4}
+Interval_Data <- aggregate(x=list(Steps=Data$steps), by=list(Interval=Data$interval), FUN=mean, na.rm=TRUE)
+ggplot(Interval_Data, aes(x=Interval, y=Steps)) + geom_line() +
+  xlab("Interval") + ylab("Mean Steps Daily") + 
+  labs(title=expression("Daily Average Activity Pattern"))
+```
+
+```{r step5}
+max <- Interval_Data$Interval[Interval_Data$Steps == max(Interval_Data$Steps)]
+```
+
+##### Interval `r max` contains the maximum number of steps on average across all days
+
+### Impute Missing Values
+
+The total missing value is `r nrow(subset(Data,is.na(steps)))`
+
+```{r step6}
+library(simputation)
+New_Data <- impute_median(Data, steps ~ interval)
+```
+
+```{r step7}
+Total_New_Data <- aggregate(x=list(Steps=New_Data$steps), by=list(Date=New_Data$date), FUN=sum)
+ggplot(Total_New_Data, aes(x=Steps)) + geom_histogram() +
+  xlab("Steps/Day") + ylab("Count") + 
+  labs(title=expression("Total Number of Steps Taken Per Day"))
+```
+
+The mean is `r mean(Total_New_Data$Steps) ` and the median is `r median(Total_New_Data$Steps)`
+
+### Panel plot comparing the average number of steps taken per 5-minute interval across weekdays and weekends
+
+```{r step8}
+New_Data$week <- ifelse(weekdays(New_Data$date) == "Saturday" | weekdays(New_Data$date) == "Sunday" ,"weekend","weekday")
+Interval_New_Data <- aggregate(x=list(Steps=New_Data$steps), by=list(Week=New_Data$week, Interval=New_Data$interval),
+                           FUN=mean)
+ggplot(Interval_New_Data, aes(x=Interval, y=Steps, fill=Week)) + 
+  facet_grid( .~Week) +
+  geom_line() +
+  xlab("Interval") + ylab("Mean Steps Daily") + 
+  labs(title=expression("Daily Average Activity Pattern for Weekday and Weekend"))
+```
 
 
 
-## What is mean total number of steps taken per day?
 
 
 
-## What is the average daily activity pattern?
 
 
 
-## Imputing missing values
 
 
 
-## Are there differences in activity patterns between weekdays and weekends?
+
+
+
